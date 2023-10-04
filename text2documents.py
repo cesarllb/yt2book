@@ -7,7 +7,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
 
-def create_epub(texts: list, author: str, title: str, cover_url: str, lang = 'en'):
+def create_epub(texts: list[str], chapters_name: list[str], author: str, title: str, cover_url: str, lang = 'en'):
     book = epub.EpubBook()
 
     # Set metadata
@@ -20,10 +20,9 @@ def create_epub(texts: list, author: str, title: str, cover_url: str, lang = 'en
 
     chapters = []
     for i, text in enumerate(texts):
-        # Create chapter
-        c = epub.EpubHtml(title=f'Chapter {i+1}', file_name=f'chap_{i+1}.xhtml', lang= lang)
+        chapter = chapters_name[i] if len(chapters_name) == len(text) else f'Chapter {i+1}'
+        c = epub.EpubHtml(title= chapter, file_name=f'chap_{i+1}.xhtml', lang= lang)
         c.content = text
-        # Add chapter to the book and to our chapters list
         book.add_item(c)
         chapters.append(c)
     # Define Table Of Contents
@@ -45,7 +44,7 @@ def create_epub(texts: list, author: str, title: str, cover_url: str, lang = 'en
     # Write EPUB file
     epub.write_epub(f'{title} - {author}.epub', book)
     
-def create_pdf(texts: list, author: str, title: str, cover_url: str):
+def create_pdf(texts: list[str], chapters_name: list[str], author: str, title: str, cover_url: str):
     c = canvas.Canvas(f"{title}.pdf", pagesize=letter)
     width, height = letter
 
@@ -59,7 +58,8 @@ def create_pdf(texts: list, author: str, title: str, cover_url: str):
     for i, text in enumerate(texts):
         # Add text to the page
         c.setFont("Helvetica", 10)
-        c.drawString(10, height - 50, f"Chapter {i+1}")
+        chapter = chapters_name[i] if len(chapters_name) == len(text) else f'Chapter {i+1}'
+        c.drawString(10, height - 50, chapter)
         textobject = c.beginText()
         textobject.setTextOrigin(10, height - 100)
         textobject.textLines(text)

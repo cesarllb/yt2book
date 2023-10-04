@@ -1,1 +1,7 @@
-yt2book_env
+# Ignore everything
+*
+
+# But not these files...
+!text2documents.py
+!yt_util.py
+!yt2text.py
