@@ -1,3 +1,4 @@
+import asyncio
 from enum import Enum
 from youtube_transcript_api import NoTranscriptFound
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -13,16 +14,20 @@ class Language(Enum):
         JAPANESE = 'ja'
         ITALIAN = 'it'
         GERMAN = 'de'
+        FRANCE = 'fr'
         
 class Youtube2Text:
     
     def __init__(self, video_id) -> None:
         self.id = video_id
-        self.transcript_list = YouTubeTranscriptApi.list_transcripts(self.id)
+        self.transcript_list = self._get_list()
 
-    def get_transcript(self, lang: Language, generated_transcript = False) -> dict:
-        if not lang in Language:
-            raise ValueError(f'Unsupported language: {lang}')
+    def _get_list(self):
+        return YouTubeTranscriptApi.list_transcripts(self.id)
+    
+    def get_transcript(self, lang: str, generated_transcript = False) -> dict:
+        # if lang in [l.value for l in Language]:
+        #     raise ValueError(f'Unsupported language: {lang}')
         try:
             transcript = self.transcript_list.find_manually_created_transcript([lang])
             return transcript.fetch()

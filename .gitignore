@@ -3,5 +3,8 @@
 
 # But not these files...
 !text2documents.py
-!yt_util.py
+!text2speach.py
 !yt2text.py
+!yt_util.py
+!main.py
+!ui.py
