@@ -1,52 +1,46 @@
 import streamlit as st
-from yt_util import YoutubePlaylist
-from text2document import create_epub, create_pdf
-from text2speach import save_as_audiobook
+from backend import yt_util
+from backend.yt_util import YoutubePlaylist
+from backend.converter import text2speach #save_as_audiobook
+from backend.converter import text2document #create_epub, create_pdf
 
 def process_video(url):
     st.session_state.playlist = YoutubePlaylist(url)
 
-def extraer_scripts(lang_code: str = None):
+def extract_transcripts(lang_code: str = None):
     if lang_code:
         st.session_state.text_paths: list[str] = st.session_state.playlist.save_all_transcript(lang_code, translate= True)
     elif not lang_code:
         st.session_state.text_paths: list[str] = st.session_state.playlist.save_all_transcript(lang_code, translate= False)
     st.session_state.lang_code = lang_code
-    
-    texts, chap_titles = [], []
-    for path in st.session_state.text_paths:
-        chap_titles.append( path.split('/')[-1] )
-        with open(path) as f:
-            texts.append(f.read())
-    st.session_state.texts = texts
-    st.session_state.chap_titles = chap_titles
-
-def to_audiobook():
-    save_as_audiobook(st.session_state.texts, 
-                    st.session_state.playlist.name + ' ' + st.session_state.playlist.channel_name, st.session_state.lang_code)
+    st.session_state.texts, st.session_state.chap_titles = yt_util.get_texts_and_chapters_titles(st.session_state.text_paths) 
 
 def to_document(format: str):
     if format == 'PDF':
-        create_pdf(st.session_state.texts, st.session_state.chap_titles, 
+        text2document.create_pdf(st.session_state.texts, st.session_state.chap_titles, 
                 st.session_state.playlist.channel_name, st.session_state.playlist.name, 
                 st.session_state.playlist.list_videos[0].thumbnail_url)
     if format == 'EPUB':
-        create_epub(st.session_state.texts, st.session_state.chap_titles, 
+        text2document.create_epub(st.session_state.texts, st.session_state.chap_titles, 
                 st.session_state.playlist.channel_name, st.session_state.playlist.name, 
-                st.session_state.playlist.list_videos[0].thumbnail_url, lang= st.session_state.lang_code)
+                st.session_state.playlist.list_videos[0].thumbnail_url)
 
-st.title('Procesador de Playlist de YouTube')
-st.session_state.url = st.text_input('Introduce la URL de la playlist de YouTube')
+st.title('Process YouTube list')
+col1, col2 = st.columns(2)
+col2.markdown("<br>"*1, unsafe_allow_html=True)
 
-
-format = st.selectbox('Select the language to extract the transcript', ('es', 'en', 'it', 'fr', 'hi', 'zh', 'ru', 'de'))
-if st.button('Procesar videos'):
+st.session_state.url = col1.text_input('Insert the YouTube playlist URL here')
+if col2.button('Process'):
     process_video(st.session_state.url)
-    extraer_scripts(lang_code='es')
+    extract_transcripts(lang_code= format)
+    st.session_state.processed = True
+    
+if 'processed' in st.session_state:
+    format = col1.selectbox('Select the language to extract the transcript', ('es', 'en', 'it', 'fr', 'hi', 'zh', 'ru', 'de'))
+    if col2.button('Save scripts in an audiobook'):
+        text2speach.save_as_audiobook(st.session_state.texts, 
+                        st.session_state.playlist.name + ' ' + st.session_state.playlist.channel_name, st.session_state.lang_code)
 
-if st.button('Guardar scripts extraídos como un audiolibro'):
-    to_audiobook()
-
-format = st.selectbox('Selecciona el formato del documento', ('PDF', 'EPUB'))
-if st.button('Convertir playlist a documento'):
-    to_document(format)
+    format = col1.selectbox('Select the document format', ('PDF', 'EPUB'))
+    if col2.button('COnvert playlist to document'):
+        to_document(format)

@@ -2,9 +2,6 @@
 *
 
 # But not these files...
-!text2documents.py
-!text2speach.py
-!yt2text.py
-!yt_util.py
-!main.py
+!backend
+!__main__.py
 !ui.py
