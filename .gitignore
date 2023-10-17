@@ -4,4 +4,6 @@
 # But not these files...
 !backend
 !__main__.py
-!ui.py
+!streamlit_ui.py
+!kivy_ui.py
+!ui_core.py
